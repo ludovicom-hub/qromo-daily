@@ -147,17 +147,55 @@ ttv_wow_multi AS (
           AND o.date >= d.wow_start AND o.date < d.wow_end
     )
 ),
-mer_ieri AS (
+mer_ieri_tov AS (
     SELECT COUNT(DISTINCT o.business_id) AS n
     FROM qromo.orders o, date_ranges d
     WHERE o.status NOT IN ('canceled','unconfirmed','failed','deleted','merged')
       AND o.paid = 1 AND o.date >= d.ieri_start AND o.date < d.ieri_end
 ),
-mer_l7d_avg AS (
+mer_ieri_ttv AS (
+    SELECT COUNT(DISTINCT business_id) AS n FROM (
+        SELECT DISTINCT o.business_id
+        FROM qromo.orders o, date_ranges d
+        WHERE o.status NOT IN ('canceled','unconfirmed','failed','deleted','merged')
+          AND o.paid = 1 AND o.type = 'stripe'
+          AND o.date >= d.ieri_start AND o.date < d.ieri_end
+        UNION
+        SELECT DISTINCT o.business_id
+        FROM qromo.orders_payments op
+        JOIN qromo.payments p ON p.payment_id = op.payment_id
+        JOIN qromo.orders o ON o.order_id = op.order_id
+        CROSS JOIN date_ranges d
+        WHERE p.type = 'stripe'
+          AND o.status NOT IN ('canceled','unconfirmed','failed','deleted','merged')
+          AND o.paid = 1 AND o.type != 'stripe'
+          AND o.date >= d.ieri_start AND o.date < d.ieri_end
+    )
+),
+mer_l7d_tov_avg AS (
     SELECT COUNT(DISTINCT o.business_id || '|' || DATE_TRUNC('day', o.date))::DECIMAL / 7 AS n_avg
     FROM qromo.orders o, date_ranges d
     WHERE o.status NOT IN ('canceled','unconfirmed','failed','deleted','merged')
       AND o.paid = 1 AND o.date >= d.l7d_start AND o.date < d.l7d_end
+),
+mer_l7d_ttv_avg AS (
+    SELECT COUNT(DISTINCT business_id_day)::DECIMAL / 7 AS n_avg FROM (
+        SELECT DISTINCT o.business_id || '|' || DATE_TRUNC('day', o.date) AS business_id_day
+        FROM qromo.orders o, date_ranges d
+        WHERE o.status NOT IN ('canceled','unconfirmed','failed','deleted','merged')
+          AND o.paid = 1 AND o.type = 'stripe'
+          AND o.date >= d.l7d_start AND o.date < d.l7d_end
+        UNION
+        SELECT DISTINCT o.business_id || '|' || DATE_TRUNC('day', o.date) AS business_id_day
+        FROM qromo.orders_payments op
+        JOIN qromo.payments p ON p.payment_id = op.payment_id
+        JOIN qromo.orders o ON o.order_id = op.order_id
+        CROSS JOIN date_ranges d
+        WHERE p.type = 'stripe'
+          AND o.status NOT IN ('canceled','unconfirmed','failed','deleted','merged')
+          AND o.paid = 1 AND o.type != 'stripe'
+          AND o.date >= d.l7d_start AND o.date < d.l7d_end
+    )
 )
 SELECT
     ti.n AS orders_ieri, ti.tov AS tov_ieri,
