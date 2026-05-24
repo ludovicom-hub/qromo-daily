@@ -58,7 +58,7 @@ def run_query(sql):
         f"{METABASE_URL}/api/dataset",
         headers=HEADERS,
         json=payload,
-        timeout=60,
+        timeout=180,
     )
     r.raise_for_status()
     data = r.json()
