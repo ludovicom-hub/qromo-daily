@@ -336,8 +336,10 @@ def build_message():
     delta_ttv = ((ttv_ieri - ttv_wow) / ttv_wow * 100) if ttv_wow else None
     stripe_pct = (ttv_ieri / tov_ieri * 100) if tov_ieri else 0
     orders_ieri = pulse["orders_ieri"] or 0
-    merchant_ieri = pulse["merchant_ieri"] or 0
-    merchant_avg = pulse["merchant_l7d_avg"] or 0
+    merchant_ieri_tov = pulse["merchant_ieri_tov"] or 0
+    merchant_ieri_ttv = pulse["merchant_ieri_ttv"] or 0
+    merchant_avg_tov = pulse["merchant_l7d_tov_avg"] or 0
+    merchant_avg_ttv = pulse["merchant_l7d_ttv_avg"] or 0
 
     lines = []
     lines.append(f"☀️ <b>QROMO DAILY</b> — {label_giorno}")
@@ -347,7 +349,8 @@ def build_message():
     lines.append(f"TTV  {fmt_eur(ttv_ieri)}  {fmt_pct(delta_ttv)} WoW")
     lines.append(f"Stripe%  {stripe_pct:.1f}%")
     lines.append(f"Ordini {orders_ieri:,}".replace(",", ".") +
-                 f"  ·  Merchant {merchant_ieri} (avg7d {merchant_avg:.0f})")
+                 f"  ·  Merchant {merchant_ieri_tov} TOV / {merchant_ieri_ttv} TTV "
+                 f"(avg7d {merchant_avg_tov:.0f}/{merchant_avg_ttv:.0f})")
     lines.append("")
 
     # Nuovi merchant
