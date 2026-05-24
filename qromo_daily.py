@@ -348,8 +348,8 @@ def build_message():
     lines.append(f"TOV  {fmt_eur(tov_ieri)}  {fmt_pct(delta_tov)} WoW")
     lines.append(f"TTV  {fmt_eur(ttv_ieri)}  {fmt_pct(delta_ttv)} WoW")
     lines.append(f"Stripe%  {stripe_pct:.1f}%")
-    lines.append(f"Ordini {orders_ieri:,}".replace(",", ".") +
-                 f"  ·  Merchant {merchant_ieri_tov} TOV / {merchant_ieri_ttv} TTV "
+    lines.append(f"Ordini {orders_ieri:,}".replace(",", "."))
+    lines.append(f"Merchant {merchant_ieri_tov} TOV / {merchant_ieri_ttv} TTV "
                  f"(avg7d {merchant_avg_tov:.0f}/{merchant_avg_ttv:.0f})")
     lines.append("")
 
