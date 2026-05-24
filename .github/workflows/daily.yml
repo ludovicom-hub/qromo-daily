@@ -1,0 +1,55 @@
+name: Qromo Daily Digest
+
+on:
+  schedule:
+    # 9:00 ora italiana = 07:00 UTC (estate, CEST) / 08:00 UTC (inverno, CET)
+    - cron: '0 7 * * *'   # estate (marzo-ottobre) — 09:00 CEST
+    - cron: '0 8 * * *'   # inverno (ottobre-marzo) — 09:00 CET
+  workflow_dispatch:       # permette il run manuale dal tab Actions
+
+jobs:
+  send-digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Determine if today's run is correct for local time
+        id: check_time
+        run: |
+          IS_DST=$(python3 -c "
+          import datetime
+          now = datetime.datetime.utcnow()
+          y = now.year
+          dst_start = max(d for d in [datetime.date(y, 3, i) for i in range(25, 32)] if d.weekday() == 6)
+          dst_end = max(d for d in [datetime.date(y, 10, i) for i in range(25, 32)] if d.weekday() == 6)
+          print('1' if dst_start <= now.date() < dst_end else '0')
+          ")
+          HOUR=$(date -u +%H)
+          if [ "$IS_DST" = "1" ] && [ "$HOUR" = "07" ]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          elif [ "$IS_DST" = "0" ] && [ "$HOUR" = "08" ]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_run=false" >> $GITHUB_OUTPUT
+            echo "Skipping: DST=$IS_DST, UTC hour=$HOUR"
+          fi
+
+      - name: Run digest script
+        if: steps.check_time.outputs.should_run == 'true' || github.event_name == 'workflow_dispatch'
+        env:
+          METABASE_URL: ${{ secrets.METABASE_URL }}
+          METABASE_API_KEY: ${{ secrets.METABASE_API_KEY }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python qromo_daily.py
