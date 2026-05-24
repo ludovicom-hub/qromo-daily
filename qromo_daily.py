@@ -202,10 +202,14 @@ SELECT
     tw.tov AS tov_wow,
     COALESCE(tis.ttv, 0) + COALESCE(tim.ttv, 0) AS ttv_ieri,
     COALESCE(tws.ttv, 0) + COALESCE(twm.ttv, 0) AS ttv_wow,
-    mi.n AS merchant_ieri,
-    ml.n_avg AS merchant_l7d_avg
+    mit.n AS merchant_ieri_tov,
+    miv.n AS merchant_ieri_ttv,
+    mlt.n_avg AS merchant_l7d_tov_avg,
+    mlv.n_avg AS merchant_l7d_ttv_avg
 FROM tov_ieri ti, tov_wow tw, ttv_ieri_single tis, ttv_ieri_multi tim,
-     ttv_wow_single tws, ttv_wow_multi twm, mer_ieri mi, mer_l7d_avg ml
+     ttv_wow_single tws, ttv_wow_multi twm,
+     mer_ieri_tov mit, mer_ieri_ttv miv,
+     mer_l7d_tov_avg mlt, mer_l7d_ttv_avg mlv
 """
 
 SQL_NUOVI_MERCHANT = """
